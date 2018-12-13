@@ -14,6 +14,7 @@
             AMRITANSHU SIKDAR
 */
 
+
 // Header Files
 
 #include <ncurses.h>
@@ -58,11 +59,13 @@ void gamePlay_Snake_MultiPlayer();
 void gameOver(void);
 void thanksForPlaying(void);
 void multiplayerGameMenu(void);
-void winnerOfGame(char*);
+void winnerOfGame(const char*);
+void showHighScores(void);
 
 
 //  Global variables
-bool newPlay = false;                           // boolean flag to check whether its a new game
+bool newPlay = true;                           // boolean flag to check whether its a new game
+
 int foodX,foodY;                                // for snakefood
 int snakeHead_1_X,snakeHead_1_Y;                // position coordinates of Snake_1
 int snakeHead_2_X,snakeHead_2_Y;                // position coordinates of Snake_2
@@ -81,8 +84,27 @@ int __init__Snake_1_POSITION_Y;                 // initial positionY of snake 1
 int __init__Snake_2_POSITION_X;                 // initial positionX of snake 2
 int __init__Snake_2_POSITION_Y;                 // initial positionY of snake 2
 
+char playerName_1[10];                          //  Name of the first player {will also be used for single player name}
+char playerName_2[10];                          //  Name of the second player
+
+
 /* ~~ START OF MAIN FUNCTION ~~ */
 
+
+// int main()
+// {
+//     initscr();
+
+//     cbreak();
+//     noecho();
+
+//     curs_set(0);
+
+//     showHighScores();
+
+//     endwin();
+//     return 0;
+// }
 
 int main()
 {
@@ -134,9 +156,6 @@ void CommenceTheGame(void)
 
     welcomeScreen();
 
-    gameBorder();                                   // printing the Game Borders
-    foodCheck();                                    // printing the Score Board
-    foodNscore();                                   // initializing the Food and ScoreBoard
     multiplayerGameMenu();                          // The Main Menu of the Multiplayer Snake Game
 
     // starting the game menu and eventually the gameplay
@@ -214,13 +233,49 @@ void gameBorder(void)
 
 void foodNscore(void)  // function to print the Food and Score [same function does both the jobs]
 {
-    int height = 3, width = 15, startX, startY; // foodNscore window
+    int height = 3, width = 10, startX, startY; // foodNscore window
+    int nameLimit = 8;      // Why 8? 'cause that's my roll number xD
 
     startX = (getmaxx(stdscr) - width) / 2; startY=1;  // Positioning the foodNscore
 
     if(gameMenuUserSelection == 0)
     {
-        WINDOW * scoreBoard_Player_1 = newwin(height, width, startY, startX);  // Creating the foodNscore
+        //  Getting the name of Single Player
+
+        if(newPlay == true)
+        {
+            WINDOW * player_1_Name_window = newwin(height, width*3, (getmaxy(stdscr)-height)/2,startX-width);
+            PANEL * player_1_Name_panel = new_panel(player_1_Name_window);
+
+
+            wattron(player_1_Name_window,A_REVERSE);
+            wattron(player_1_Name_window, A_BOLD);
+
+            curs_set(1);
+            echo();
+
+            box(player_1_Name_window,(int)'!',(int)'=');
+            mvwprintw(player_1_Name_window,1,1,"Enter your Name:            "); //  Extra spaces for filling up the dark gaps
+            wmove(player_1_Name_window,1,18);
+            wgetnstr(player_1_Name_window,playerName_1,nameLimit);      //  getting the actual input
+
+            wattroff(player_1_Name_window,A_REVERSE);
+            wattroff(player_1_Name_window, A_BOLD);
+
+            hide_panel(player_1_Name_panel);
+            doupdate();
+
+            curs_set(0);
+            noecho();
+
+            wclear(player_1_Name_window);
+        }
+        
+        refresh();
+
+        // ScoreBoard of the Single Player
+
+        WINDOW * scoreBoard_Player_1 = newwin(height, width+(nameLimit/2)+1, startY, startX);  // Creating the foodNscore {window for scoreboard on the top}
 
         wattron(scoreBoard_Player_1,A_REVERSE);
         wattron(scoreBoard_Player_1,A_BOLD);
@@ -228,7 +283,7 @@ void foodNscore(void)  // function to print the Food and Score [same function do
 
         box(scoreBoard_Player_1,(int)'!',(int)'=');
         mvwprintw(scoreBoard_Player_1,1,1,"             ");  // filling up white spaces
-        mvwprintw(scoreBoard_Player_1,1,1,"Player 1: %d",score_1);  // printing the score
+        mvwprintw(scoreBoard_Player_1,1,((getmaxx(scoreBoard_Player_1) - strlen(playerName_1)) / 2) - 2,"%s: %d",playerName_1,score_1);  // printing the score
         wrefresh(scoreBoard_Player_1);  // refreshing foodNscore
 
         wattroff(scoreBoard_Player_1,A_BOLD);
@@ -237,17 +292,75 @@ void foodNscore(void)  // function to print the Food and Score [same function do
     
     if(gameMenuUserSelection == 1)
     {
+        // Getting names of First and Second Players
+
+        if(newPlay == true)
+        {
+            //  Player 1
+
+            WINDOW * player_1_Name_window = newwin(height, width*3, (getmaxy(stdscr)-height)/2,startX-width);
+            PANEL * player_1_Name_panel = new_panel(player_1_Name_window);
+
+
+            wattron(player_1_Name_window,A_REVERSE);
+            wattron(player_1_Name_window, A_BOLD);
+
+            curs_set(1);
+            echo();
+
+            box(player_1_Name_window,(int)'!',(int)'=');
+            mvwprintw(player_1_Name_window,1,1,"Name of Player 1:            "); //  Extra spaces for filling up the dark gaps
+            wmove(player_1_Name_window,1,19);
+            wgetnstr(player_1_Name_window,playerName_1,nameLimit);      //  getting the actual input
+
+            wattroff(player_1_Name_window,A_REVERSE);
+            wattroff(player_1_Name_window, A_BOLD);
+
+            hide_panel(player_1_Name_panel);
+            doupdate();
+
+            wclear(player_1_Name_window);
+
+            //  Player 2
+
+            WINDOW * player_2_Name_window = newwin(height, width*3, (getmaxy(stdscr)-height)/2,startX-width);
+            PANEL * player_2_Name_panel = new_panel(player_2_Name_window);
+
+
+            wattron(player_2_Name_window,A_REVERSE);
+            wattron(player_2_Name_window, A_BOLD);
+
+            box(player_2_Name_window,(int)'!',(int)'=');
+            mvwprintw(player_2_Name_window,1,1,"Name of Player 2:            "); //  Extra spaces for filling up the dark gaps
+            wmove(player_2_Name_window,1,19);
+            wgetnstr(player_2_Name_window,playerName_2,nameLimit);      //  getting the actual input
+
+            wattroff(player_2_Name_window,A_REVERSE);
+            wattroff(player_2_Name_window, A_BOLD);
+
+            hide_panel(player_2_Name_panel);
+            doupdate();
+
+            curs_set(0);
+            noecho();
+
+            wclear(player_2_Name_window);
+        }
+        
+        refresh();
+
+
         //  ScoreBoard of Player 1
 
-        WINDOW * scoreBoard_Player_1 = newwin(height, width, startY, startX - (getmaxx(stdscr)/4));  // Creating the foodNscore
+        WINDOW * scoreBoard_Player_1 = newwin(height, width+(nameLimit/2)+1, startY, startX - (getmaxx(stdscr)/4));  // Creating the foodNscore
 
         wattron(scoreBoard_Player_1,A_REVERSE);
         wattron(scoreBoard_Player_1,A_BOLD);
         attron(A_BOLD);
 
-        box(scoreBoard_Player_1,(int)'!',(int)'=');
+        box(scoreBoard_Player_1,(int)'!',(int)'=');     
         mvwprintw(scoreBoard_Player_1,1,1,"             ");  // filling up white spaces
-        mvwprintw(scoreBoard_Player_1,1,1,"Player 1: %d",score_1);  // printing the score
+        mvwprintw(scoreBoard_Player_1,1,((getmaxx(scoreBoard_Player_1) - strlen(playerName_1)) / 2) - 2,"%s: %d",playerName_1,score_1);  // printing the score
         wrefresh(scoreBoard_Player_1);  // refreshing foodNscore
 
         wattroff(scoreBoard_Player_1,A_BOLD);
@@ -255,7 +368,7 @@ void foodNscore(void)  // function to print the Food and Score [same function do
 
         //  ScoreBoard of Player 2
 
-        WINDOW * scoreBoard_Player_2 = newwin(height, width, startY, startX + (getmaxx(stdscr)/4));  // Creating the foodNscore
+        WINDOW * scoreBoard_Player_2 = newwin(height, width+(nameLimit/2)+1, startY, startX + (getmaxx(stdscr)/4));  // Creating the foodNscore
 
         wattron(scoreBoard_Player_2,A_REVERSE);
         wattron(scoreBoard_Player_2,A_BOLD);
@@ -263,12 +376,13 @@ void foodNscore(void)  // function to print the Food and Score [same function do
 
         box(scoreBoard_Player_2,(int)'!',(int)'=');
         mvwprintw(scoreBoard_Player_2,1,1,"             ");  // filling up white spaces
-        mvwprintw(scoreBoard_Player_2,1,1,"Player 2: %d",score_2);  // printing the score
+        mvwprintw(scoreBoard_Player_2,1,((getmaxx(scoreBoard_Player_2) - strlen(playerName_2)) / 2) - 2,"%s: %d",playerName_2,score_2);  // printing the score
         wrefresh(scoreBoard_Player_2);  // refreshing foodNscore
 
         wattroff(scoreBoard_Player_2,A_BOLD);
         wattroff(scoreBoard_Player_2,A_REVERSE);
     }
+
 
     // Making the Food!
 
@@ -633,8 +747,6 @@ void gameOver(void)
     wclear(gameOver);
     wrefresh(gameOver);
 
-    foodNscore();
-
     multiplayerGameMenu();
     refresh();
 }
@@ -663,7 +775,7 @@ void pauseMenu(void)
             }
             //  adjusting the "Exit" option, as it was going out of bounds
             if(j == 0)
-                    maxx = 5;
+                maxx = 5;
             else if(j == 1)
                 maxx = 3;
 
@@ -739,10 +851,9 @@ void checkCollision(void)
         if(gameMenuUserSelection == 1)
             winnerOfGame("! ~ Player 2 WINS ~ !");
         else if(gameMenuUserSelection == 0)
-            winnerOfGame("  ! ~ YOU   LOST ~ !  ");
+            gameOver();
 
         refresh();
-        gameOver();
     }
 
     if(snakeHead_2_Y<5 || snakeHead_2_X<2 || snakeHead_2_X>getmaxx(stdscr)-3 || snakeHead_2_Y>getmaxy(stdscr)-3)    //  in case the snake 2 head hits the game boundaries
@@ -755,7 +866,6 @@ void checkCollision(void)
         winnerOfGame("! ~ Player 1 WINS ~ !");
 
         refresh();
-        gameOver();
     }
 
 
@@ -773,17 +883,19 @@ void gamePlay_Snake_SinglePlayer(void)
 
     keypad(stdscr,TRUE);    // initializes keyboard input
 
+    gameBorder();       // printing the game borders
+    foodNscore();       // initializing the Food and ScoreBoard
+    foodCheck();        // calling the referee
+
     if(newPlay == true)
     {
-        assignPositionToSnakes();
-
         i_1 = 0;
         newPlay = false;
 
         clear();
-        gameBorder();
-        foodCheck();
-        foodNscore();
+        gameBorder();       // printing the game borders
+        foodNscore();       // initializing the Food and ScoreBoard
+        foodCheck();        // calling the referee
 
         refresh();
     }
@@ -860,18 +972,20 @@ void gamePlay_Snake_MultiPlayer(void)
 
     keypad(stdscr,TRUE);    // initializes keyboard input
 
+    gameBorder();       // printing the game borders
+    foodNscore();       // initializing the Food and ScoreBoard
+    foodCheck();        // calling the referee
+
     if(newPlay == true)
     {
-        assignPositionToSnakes();
-
         i_1 = 0;
         i_2 = 0;
         newPlay = false;
 
         clear();
-        gameBorder();
-        foodCheck();
-        foodNscore();
+        gameBorder();       // printing the game borders
+        foodNscore();       // initializing the Food and ScoreBoard
+        foodCheck();        // calling the referee
 
         refresh();
     }
@@ -885,33 +999,15 @@ void gamePlay_Snake_MultiPlayer(void)
             switch(multiplayerInput)
             {
                 case 'w':
-                    mp2 = multiplayerInput;
-                    break;
-
                 case 'a':
-                    mp2 = multiplayerInput;
-                    break;
-
                 case 's':
-                    mp2 = multiplayerInput;
-                    break;
-
                 case 'd':
                     mp2 = multiplayerInput;
                     break;
                 
                 case (char) KEY_UP:
-                    mp1 = multiplayerInput;
-                    break;
-
                 case (char) KEY_DOWN:
-                    mp1 = multiplayerInput;
-                    break;
-
                 case (char) KEY_LEFT:
-                    mp1 = multiplayerInput;
-                    break;
-
                 case (char) KEY_RIGHT:
                     mp1 = multiplayerInput;
                     break;
@@ -939,6 +1035,8 @@ void gamePlay_Snake_MultiPlayer(void)
             case (char) KEY_RIGHT:
                 playerRIGHT_SNAKE_1();
                 break;
+
+
             default:
                 refresh();
                 break;
@@ -961,6 +1059,8 @@ void gamePlay_Snake_MultiPlayer(void)
             case 'd':
                 playerRIGHT_SNAKE_2();
                 break;
+
+                
             default:
                 refresh();
                 break;
@@ -1106,6 +1206,7 @@ void multiplayerGameMenu(void)
     }
     else if(gameMenuUserSelection == 2)
     {
+        showHighScores();
         /* 
         
         high score stuff to be added here
@@ -1127,7 +1228,8 @@ void multiplayerGameMenu(void)
     refresh();
 }
 
-void winnerOfGame(char *nameOfWinner)
+
+void winnerOfGame(const char *nameOfWinner)
 {
     int height = 3, width = 30, startX, startY;
 
@@ -1158,9 +1260,38 @@ void winnerOfGame(char *nameOfWinner)
 
     getch();
 
-    multiplayerGameMenu();
+    gameOver();
+    refresh();
+}
 
+void showHighScores(void)
+{
+    int height = 20, width = 40, startX = (getmaxx(stdscr) - width) / 2, startY = (getmaxy(stdscr) - height) / 2;
+    
+    WINDOW * highScores_window = newwin(height, width, startY, startX);
+    PANEL * highScores_panel = new_panel(highScores_window);
+
+    box(highScores_window, (int)'^', (int)'|');
+    mvwprintw(highScores_window,1,5," ~~~ H I G H   S C O R E S ~~~");
+    mvwprintw(highScores_window,2,2,"====================================");
+    
+    mvwprintw(highScores_window,3,getmaxx(highScores_window)/4,"|| SINGLE PLAYER ||");
+    mvwprintw(highScores_window,4,getmaxx(highScores_window)/4 + 3,"-------------");
+
+    mvwprintw(highScores_window,10,4,"* * * * * * * * * * * * * * * * ");
+
+    mvwprintw(highScores_window,11,getmaxx(highScores_window)/4 + 1,"|| MULTI PLAYER ||");
+    mvwprintw(highScores_window,12,getmaxx(highScores_window)/4 + 3,"-------------");
+
+
+    update_panels();
+    doupdate();
     getch();
 
-    refresh();
+    hide_panel(highScores_panel);   //  hiding the HIGH SCORES panel
+
+    update_panels();                //  updating ~~~ panels ~~~ showing ~~ the ~~~~~~~~ screen
+    doupdate();                     //  ~~~~~~~~ the ~~~~~~ and ~~~~~~~ on ~~~ Terminal
+
+    multiplayerGameMenu();
 }
